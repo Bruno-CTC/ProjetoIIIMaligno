@@ -10,7 +10,7 @@ public class Janela implements ClientListener {
     public JTextField textField = new JTextField();
 
     public Janela() {
-        client = new Client(this, "localhost", 5000);
+        client = new Client(this, "143.106.203.50", 1194);
         JFrame frame = new JFrame("Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(500, 500);

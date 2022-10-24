@@ -113,6 +113,6 @@ public class Server {
     }
     public static void main(String[] args)
     {
-        Server serv = new Server(5000);
+        Server serv = new Server(1194);
     }
 }
