@@ -34,8 +34,7 @@ public class Server {
             System.out.println(i);
         }
     }
-    public void close()
-    {
+    public void close() {
         System.out.println("Closing connection");
         try {
             connect.interrupt();
@@ -74,7 +73,7 @@ public class Server {
                             break;
                         case PacketType.SYNCVALUE:
                             String val = i.readUTF();
-                            System.out.println("Received sync packet with value: " + val);
+                            System.out.println("Syncing value " + val + " to all clients");
                             for (DataOutputStream o : outputs) {
                                 if (o == outputs.get(id)) continue;
                                 o.write(PacketType.SYNCVALUE);
@@ -89,14 +88,12 @@ public class Server {
             updating = false;
         }
     }
-    private void handleConnections()
-    {
+    private void handleConnections() {
         while (!server.isClosed())
         {
             try {
                 Socket s = server.accept();
                 System.out.println("Client with id " + connections.size() + " connected");
-                connections.add(s);
                 while (updating)
                 {
                     try {
@@ -105,6 +102,7 @@ public class Server {
                         throw new RuntimeException(e);
                     }
                 }
+                connections.add(s);
                 inputs.add(new DataInputStream(s.getInputStream()));
                 outputs.add(new DataOutputStream(s.getOutputStream()));
             } catch (IOException e) {
@@ -113,6 +111,6 @@ public class Server {
     }
     public static void main(String[] args)
     {
-        Server serv = new Server(1194);
+        Server serv = new Server(1984);
     }
 }
