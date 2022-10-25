@@ -1,15 +1,17 @@
-import client.Client;
-import client.ClientListener;
-import client.PacketType;
+import server.Client;
+import server.ClientListener;
+import server.PacketType;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.DataInputStream;
 
 public class Main {
     public static class Janela implements ClientListener {
         public Client client;
         public JTextField textField = new JTextField();
-
+        public TextArea messages = new TextArea();
+        private final String name = System.getProperty("user.name");
         public Janela() {
             client = new Client(this, "localhost", 5000);
             JFrame frame = new JFrame("Test");
@@ -18,16 +20,25 @@ public class Main {
             frame.setLayout(null);
             frame.setVisible(true);
 
-            textField.setBounds(0, 60, 100, 20);
+            textField.setBounds(0, 60, 500, 20);
             frame.add(textField);
 
-            JButton btn = new JButton("Send packet");
-            btn.setBounds(0, 0, 100, 50);
-            btn.addActionListener(e -> client.sendPacket(PacketType.SYNCVALUE, textField.getText()));
+            messages.setBounds(0, 90, 500, 200);
+            messages.setEditable(false);
+            frame.add(messages);
+
+            JButton btn = new JButton("Mandar Mensagem");
+            btn.setBounds(0, 0, 500, 50);
+            btn.addActionListener(e -> {
+                messages.setText(messages.getText() + "\n" + name + ": " + textField.getText());
+                client.sendPacket(PacketType.SYNCVALUE, name, textField.getText());
+                textField.setText("");
+                textField.grabFocus();
+            });
             frame.add(btn);
 
             JButton btnFechar = new JButton("Fechar");
-            btnFechar.setBounds(0, 100, 100, 50);
+            btnFechar.setBounds(0, 400, 500, 50);
             btnFechar.addActionListener(e -> {
                 client.close();
                 frame.dispose();
@@ -40,9 +51,7 @@ public class Main {
             try {
                 int id = in.read();
                 switch (id) {
-                    case PacketType.SYNCVALUE:
-                        textField.setText(in.readUTF());
-                        break;
+                    case PacketType.SYNCVALUE -> messages.setText(messages.getText() + "\n" + in.readUTF() + ": " + in.readUTF());
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -50,7 +59,6 @@ public class Main {
         }
     }
     public static void main(String[] args) {
-        new Janela();
         new Janela();
     }
 }

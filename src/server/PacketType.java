@@ -1,4 +1,4 @@
-package client;
+package server;
 
 public class PacketType {
     public final static int DISCONNECT = 0;

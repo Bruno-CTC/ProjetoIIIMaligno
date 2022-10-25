@@ -1,4 +1,4 @@
-import client.PacketType;
+import server.PacketType;
 import server.Server;
 import server.ServerListener;
 
@@ -14,15 +14,13 @@ public class MainServer implements ServerListener {
     @Override
     public void receiveData(DataInputStream in, int id) throws IOException {
         int packetType = in.read();
-        switch (packetType)
-        {
-            case PacketType.DISCONNECT:
-                server.disconnect(id);
-                break;
-            case PacketType.SYNCVALUE:
+        switch (packetType) {
+            case PacketType.DISCONNECT -> server.disconnect(id);
+            case PacketType.SYNCVALUE -> {
+                String name = in.readUTF();
                 String val = in.readUTF();
-                server.sendDataToOthers(id, PacketType.SYNCVALUE, val);
-                break;
+                server.sendDataToOthers(id, PacketType.SYNCVALUE, name, val);
+            }
         }
     }
 }
