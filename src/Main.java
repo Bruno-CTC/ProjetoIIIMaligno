@@ -12,9 +12,9 @@ public class Main {
         public JTextField textField = new JTextField();
         public TextArea messages = new TextArea();
         private final String name = System.getProperty("user.name");
+        private final JFrame frame = new JFrame("Test");
         public Janela() {
             client = new Client(this, "177.220.18.125", 1984);
-            JFrame frame = new JFrame("Test");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(500, 500);
             frame.setLayout(null);
@@ -51,7 +51,10 @@ public class Main {
             try {
                 int id = in.read();
                 switch (id) {
-                    case PacketType.SYNCVALUE -> messages.setText(messages.getText() + "\n" + in.readUTF() + ": " + in.readUTF());
+                    case PacketType.SYNCVALUE -> {
+                        messages.setText(messages.getText() + "\n" + in.readUTF() + ": " + in.readUTF());
+                        frame.requestFocus();
+                    }
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
