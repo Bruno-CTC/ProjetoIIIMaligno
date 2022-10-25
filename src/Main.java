@@ -13,7 +13,7 @@ public class Main {
         public TextArea messages = new TextArea();
         private final String name = System.getProperty("user.name");
         public Janela() {
-            client = new Client(this, "localhost", 5000);
+            client = new Client(this, "177.220.18.125", 1984);
             JFrame frame = new JFrame("Test");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(500, 500);

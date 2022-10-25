@@ -8,7 +8,7 @@ import java.io.IOException;
 public class MainServer implements ServerListener {
     private static Server server;
     public static void main(String[] args) {
-        server = new Server(new MainServer(), 5000);
+        server = new Server(new MainServer(), 1984);
     }
 
     @Override
