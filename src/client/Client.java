@@ -51,15 +51,24 @@ public class Client {
     }
     public void sendPacket(int id, Object... args)
     {
-        System.out.println("Sending packet with id: " + id);
         try {
             out.write(id);
-            for (Object o : args) {
-                if (o instanceof String) {
-                    out.writeUTF((String)o);
+            for (Object arg : args) {
+                if (arg instanceof Integer)
+                {
+                    out.writeInt((int)arg);
                 }
-                else if (o instanceof Integer){
-                    out.write((int)o);
+                else if (arg instanceof String)
+                {
+                    out.writeUTF((String)arg);
+                }
+                else if (arg instanceof Float)
+                {
+                    out.writeFloat((float)arg);
+                }
+                else if (arg instanceof Boolean)
+                {
+                    out.writeBoolean((boolean)arg);
                 }
             }
         }

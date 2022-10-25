@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class Server {
+    private ServerListener listener;
     private ServerSocket server = null;
     private static Thread data;
     private static Thread connect;
@@ -16,9 +17,10 @@ public class Server {
     private ArrayList<DataInputStream> inputs;
     private ArrayList<DataOutputStream> outputs;
     private boolean updating;
-    public Server(int port)
+    public Server(ServerListener listener, int port)
     {
         try{
+            this.listener = listener;
             connections = new ArrayList<>();
             inputs = new ArrayList<>();
             outputs = new ArrayList<>();
@@ -59,33 +61,56 @@ public class Server {
             for (int id = 0; id < inputs.size(); id++) {
                 DataInputStream i = inputs.get(id);
                 try {
-                    // receiving client data
                     if (i.available() <= 0) continue;
-                    int packetType = i.read();
-                    switch (packetType)
-                    {
-                        case PacketType.DISCONNECT:
-                            System.out.println("Client with id: " + id + " disconnected");
-                            connections.remove(id);
-                            inputs.remove(id);
-                            outputs.remove(id);
-                            id--;
-                            break;
-                        case PacketType.SYNCVALUE:
-                            String val = i.readUTF();
-                            System.out.println("Syncing value " + val + " to all clients");
-                            for (DataOutputStream o : outputs) {
-                                if (o == outputs.get(id)) continue;
-                                o.write(PacketType.SYNCVALUE);
-                                o.writeUTF(val);
-                            }
-                            break;
-                    }
+                    listener.receiveData(i, id);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
             updating = false;
+        }
+    }
+    public void disconnect(int id)
+    {
+        System.out.println("Client with id: " + id + " disconnected");
+        connections.remove(id);
+        inputs.remove(id);
+        outputs.remove(id);
+    }
+    public void sendDataTo(int id, int type, Object... args)
+    {
+        DataOutputStream out = outputs.get(id);
+        try {
+            out.write(type);
+            for (Object arg : args)
+            {
+                if (arg instanceof Integer)
+                {
+                    out.writeInt((int)arg);
+                }
+                else if (arg instanceof String)
+                {
+                    out.writeUTF((String)arg);
+                }
+                else if (arg instanceof Float)
+                {
+                    out.writeFloat((float)arg);
+                }
+                else if (arg instanceof Boolean)
+                {
+                    out.writeBoolean((boolean)arg);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void sendDataToOthers(int id, int type, Object... args)
+    {
+        for (int i = 0; i < outputs.size(); i++)
+        {
+            if (i == id) continue;
+            sendDataTo(i, type, args);
         }
     }
     private void handleConnections() {
@@ -108,9 +133,5 @@ public class Server {
             } catch (IOException e) {
             }
         }
-    }
-    public static void main(String[] args)
-    {
-        Server serv = new Server(1984);
     }
 }
