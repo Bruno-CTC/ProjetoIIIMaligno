@@ -24,6 +24,14 @@ public class Janela implements ClientListener {
         btn.setBounds(0, 0, 100, 50);
         btn.addActionListener(e -> client.sendPacket(PacketType.SYNCVALUE, textField.getText()));
         frame.add(btn);
+
+        JButton btnFechar = new JButton("Fechar");
+        btnFechar.setBounds(0, 100, 100, 50);
+        btnFechar.addActionListener(e -> {
+            client.close();
+            frame.dispose();
+        });
+        frame.add(btnFechar);
     }
 
     @Override
