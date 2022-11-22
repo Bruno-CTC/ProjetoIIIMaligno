@@ -1,11 +1,14 @@
 import javax.swing.*;
+import java.io.IOException;
 
 public class GameFrame extends JFrame {
 
-    public GameFrame(){
+    GameFrame(Peca.Cor cliente) throws IOException {
 
+        this.add(new GamePanel1(cliente));
         this.setTitle("Damas");
-        this.add(new GamePanel(new Tabuleiro()));
+        //ImageIcon img = new ImageIcon("src\\images\\icon.png");
+        //this.setIconImage(img.getImage());
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
         this.pack();
