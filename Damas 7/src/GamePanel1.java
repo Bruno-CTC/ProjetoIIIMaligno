@@ -55,9 +55,6 @@ public class GamePanel1 extends JPanel implements ActionListener {
                 tabuleiro[i][j * 2 + (i % 2)] = new Peca((j * 2 + (i % 2)), i, Peca.Cor.BRANCO, invert);
             }
         }
-        /*tabuleiro[0][0].isDama = true;
-        tabuleiro[0][2] = new Peca(2, 0, Peca.Cor.PRETO);
-        tabuleiro[0][2].isDama = true;*/
     }
 
     public void paintComponent(Graphics g) {
@@ -403,9 +400,6 @@ public class GamePanel1 extends JPanel implements ActionListener {
                 linha = 7 - linha;
                 coluna = 7 - coluna;
             }
-
-
-            System.out.println("Linha: " + linha + " Coluna: " + coluna);
 
             // ============================= MOVIMENTOS E SELEÇÕES ============================= //
 
