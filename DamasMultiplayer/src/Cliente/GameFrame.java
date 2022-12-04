@@ -1,11 +1,13 @@
+package Cliente;
+
 import javax.swing.*;
 import java.io.IOException;
 
 public class GameFrame extends JFrame {
 
-    GameFrame(Peca.Cor cliente) throws IOException {
+    GameFrame(Tela cliente) throws IOException {
 
-        this.add(new GamePanel1(cliente));
+        this.add(cliente);
         this.setTitle("Damas");
         //ImageIcon img = new ImageIcon("src\\images\\icon.png");
         //this.setIconImage(img.getImage());
