@@ -1,17 +1,14 @@
-package Cliente;
-
-import Classes.Parceiro;
-
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.net.Socket;
+import java.awt.event.*;
+import java.io.*;
+import java.net.*;
+import javax.swing.*;
 
 public class Tela extends JPanel implements ActionListener {
+
+    ObjectInputStream receptor;
+    ObjectOutputStream transmissor;
+
 
     Peca[][] tabuleiro;
     Peca pecaSelecionada;
@@ -27,7 +24,11 @@ public class Tela extends JPanel implements ActionListener {
 
     boolean invert;
 
-    public Tela(Parceiro servidor) throws IOException {
+    public Tela(Socket canal) throws IOException {
+
+        receptor = new ObjectInputStream(canal.getInputStream());
+        transmissor = new ObjectOutputStream(canal.getOutputStream());
+
         invert = cliente == Peca.Cor.PRETO;
 
         new GameFrame(this);
@@ -173,7 +174,7 @@ public class Tela extends JPanel implements ActionListener {
 
                 if (puloMulti) {
                     puloMulti = false;
-                    vez = vez == Cliente.Peca.Cor.BRANCO ? Cliente.Peca.Cor.PRETO : Cliente.Peca.Cor.BRANCO;
+                    vez = vez == Peca.Cor.BRANCO ? Peca.Cor.PRETO : Peca.Cor.BRANCO;
                 }
             }*/
 

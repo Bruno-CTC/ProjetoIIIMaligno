@@ -1,4 +1,4 @@
-package Cliente;
+import SingleplayerPK.SinglePlayer;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
