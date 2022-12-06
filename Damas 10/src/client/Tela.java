@@ -404,11 +404,11 @@ public class Tela extends JPanel implements ClientListener {
     public void moverPeca(int linha, int coluna, boolean pulo) {
         if (linha >= 0 && linha < 8 && coluna >= 0 && coluna < 8) {
             if (tabuleiro[linha][coluna] == null) {
-                tabuleiro[pecaSelecionada.getY()][pecaSelecionada.getX()] = null;
-                pecaSelecionada.setY(linha);
-                pecaSelecionada.setX(coluna);
-                tornarDama(linha);
                 tabuleiro[linha][coluna] = pecaSelecionada;
+                tabuleiro[pecaSelecionada.getY()][pecaSelecionada.getX()] = null;
+                tabuleiro[linha][coluna].setY(linha);
+                tabuleiro[linha][coluna].setX(coluna);
+                tornarDama(linha);
 
                 if (pulo) {
                     puloMulti = true;
@@ -421,12 +421,15 @@ public class Tela extends JPanel implements ClientListener {
                         vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
                         puloMulti = false;
                     }
-                    client.sendData(new MensagemSincronizarTabuleiro(tabuleiro));
                 } else {
                     pecaSelecionada = null;
                     possiveisMovimentos = new byte[8][8];
                     vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
                 }
+
+                client.sendData(new MensagemSincronizarTabuleiro(tabuleiro));
+
+                repaint();
             }
         }
     }

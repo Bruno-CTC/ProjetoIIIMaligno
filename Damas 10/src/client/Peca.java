@@ -22,7 +22,7 @@ public class Peca implements Serializable {
         try {
             img = ImageIO.read(new File("src\\images\\icon.png"));
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
+            //JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
         }
     }
     static BufferedImage damaBranca;
@@ -30,7 +30,7 @@ public class Peca implements Serializable {
         try {
             damaBranca = ImageIO.read(new File("src\\images\\coroaBranca.png"));
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
+            //JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
         }
     }
     static BufferedImage damaPreta;
@@ -38,7 +38,7 @@ public class Peca implements Serializable {
         try {
             damaPreta = ImageIO.read(new File("src\\images\\coroaPreta.png"));
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
+            //JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
         }
     }
 
@@ -77,6 +77,8 @@ public class Peca implements Serializable {
 
     public void drawCirc(Graphics g) {
         g.setColor(Color.WHITE);
+        g.drawOval(drawX * Tela.UNIT_SIZE + border / 2, drawY * Tela.UNIT_SIZE + border / 2,
+                Tela.UNIT_SIZE - border, Tela.UNIT_SIZE - border);
     }
 
     public void drawDama(Graphics g) throws IOException {
