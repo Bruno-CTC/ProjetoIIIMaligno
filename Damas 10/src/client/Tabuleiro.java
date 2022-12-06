@@ -1,11 +1,10 @@
-package Cliente;
+package client;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import Classes.*;
 
-public class Tabuleiro extends Comunicado {
+public class Tabuleiro{
 
     ObjectInputStream receptor;
     ObjectOutputStream transmissor;

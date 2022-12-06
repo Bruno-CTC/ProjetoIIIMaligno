@@ -1,7 +1,6 @@
-package Cliente;
+package client;
 
 import javax.swing.*;
-import java.io.IOException;
 
 public class GameFrame extends JFrame {
 

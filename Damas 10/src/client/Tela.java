@@ -1,15 +1,11 @@
-/*import SingleplayerPK.Peca;
+package client;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
+import java.awt.event.*;
+import java.io.*;
+import javax.swing.*;
 
-public class GamePanel1 extends JPanel implements ActionListener {
-
+public class Tela extends JPanel implements ClientListener {
     Peca[][] tabuleiro = new Peca[8][8];
     Peca pecaSelecionada;
 
@@ -17,23 +13,52 @@ public class GamePanel1 extends JPanel implements ActionListener {
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = SCREEN_HEIGHT / 8;
 
-    Peca.Cor cliente;
-    boolean puloMulti = false;
+    Cor cliente;
+    Cor corContraria;
+    Cor vez;
+
     byte[][] possiveisMovimentos = new byte[8][8]; // 0 = não pode mover, 1 = pode mover, 2 = comer
 
-    Peca.Cor vez = Peca.Cor.BRANCO;
+    boolean invert;
+    private Client client;
+    boolean recebeuCor = false;
+    boolean jogoComecou = false;
+    public Tela(){
+        client = new Client(this, "localhost", 12345);
+        while (!jogoComecou)
+        {
+            try {
+                Thread.sleep(100);
+                System.out.println("Aguardando outro cliente");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        while (!recebeuCor)
+        {
+            try {
+                Thread.sleep(100);
+                System.out.println("Aguardando cor");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Cor recebida: " + cliente);
+        if(cliente == Cor.BRANCO)
+            corContraria = Cor.PRETO;
+        else
+            corContraria = Cor.BRANCO;
 
-    int numBrancas = 12;
-    int numPretas = 12;
 
-    //boolean invert = false;
+        vez = Cor.BRANCO;
 
-    public GamePanel1() throws IOException {
+        invert = cliente == Cor.PRETO;
+
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         this.setBackground(Color.black);
         this.setFocusable(true);
-        this.addMouseListener(new GamePanel1.MyMouseAdapter());
-        this.addMouseMotionListener(new GamePanel1.MyMouseAdapter());
+        this.addMouseListener(new MyMouseAdapter());
+        this.addMouseMotionListener(new MyMouseAdapter());
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -41,21 +66,21 @@ public class GamePanel1 extends JPanel implements ActionListener {
             }
         }
 
-        //invert = cliente == Peca.Cor.PRETO;
+        invert = cliente == Cor.PRETO;
 
         startGame();
     }
 
-    private void startGame() throws IOException {
+    private void startGame(){
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 4; j++) {
-                tabuleiro[i][(j * 2 + (i % 2))] = new Peca((j * 2 + (i % 2)), i, Peca.Cor.PRETO);
+                tabuleiro[i][(j * 2 + (i % 2))] = new Peca((j * 2 + (i % 2)), i, Cor.PRETO);
             }
         }
 
         for (int i = 5; i < 8; i++) {
             for (int j = 0; j < 4; j++) {
-                tabuleiro[i][j * 2 + (i % 2)] = new Peca((j * 2 + (i % 2)), i, Peca.Cor.BRANCO);
+                tabuleiro[i][j * 2 + (i % 2)] = new Peca((j * 2 + (i % 2)), i, Cor.BRANCO);
             }
         }
     }
@@ -87,8 +112,8 @@ public class GamePanel1 extends JPanel implements ActionListener {
         // Desenha as peças:
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (tabuleiro[i][j] != null) {
-                    tabuleiro[i][j].draw(g);
+                if (tabuleiro[i][j] != null && !tabuleiro[i][j].isDama) {
+                    tabuleiro[i][j].draw(g, invert);
                 }
             }
         }
@@ -114,56 +139,51 @@ public class GamePanel1 extends JPanel implements ActionListener {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 if (possiveisMovimentos[i][j] > 0) {
-                    g.fillOval((j) * UNIT_SIZE + UNIT_SIZE / 4 + 5 / 2, (i) * UNIT_SIZE + UNIT_SIZE / 4 + 5 / 2,
-                            UNIT_SIZE / 2 - 5, UNIT_SIZE / 2 - 5);
+                    g.setColor(new Color(255, 228, 228, 100));
+                    if (invert) {
+                        g.fillOval((7 - j) * UNIT_SIZE + UNIT_SIZE / 4 + 5 / 2, (7 - i) * UNIT_SIZE + UNIT_SIZE / 4 + 5 / 2,
+                                UNIT_SIZE / 2 - 5, UNIT_SIZE / 2 - 5);
+                    } else {
+                        g.fillOval((j) * UNIT_SIZE + UNIT_SIZE / 4 + 5 / 2, (i) * UNIT_SIZE + UNIT_SIZE / 4 + 5 / 2,
+                                UNIT_SIZE / 2 - 5, UNIT_SIZE / 2 - 5);
+                    }
                 }
             }
         }
     }
 
-    // ============================= MÉTODOS JOGO ============================= //
-
     // Seleciona a peça:
-    public void selecionarPeca(int linha, int coluna) {
-        if (tabuleiro[linha][coluna] != null && tabuleiro[linha][coluna].cor == vez)
+    public void selecionarPeca(int linha, int coluna, boolean reverso) {
+        if (reverso || (tabuleiro[linha][coluna] != null && tabuleiro[linha][coluna].cor == cliente && vez == cliente))
             pecaSelecionada = tabuleiro[linha][coluna];
     }
 
-    // Move a peça:
-    public void moverPeca(int linha, int coluna, boolean pulo) {
-        if (linha >= 0 && linha < 8 && coluna >= 0 && coluna < 8) {
-            if (tabuleiro[linha][coluna] == null) {
-                tabuleiro[pecaSelecionada.getY()][pecaSelecionada.getX()] = null;
-                tabuleiro[linha][coluna] = pecaSelecionada;
-                pecaSelecionada.setY(linha);
-                pecaSelecionada.setX(coluna);
-
-                tornarDama(linha);
-
-                if (pulo) {
-                    puloMulti = true;
-
-                    verificarMovimentos();
-
-                    if (!verificarPulos()) {
-                        pecaSelecionada = null;
-                        possiveisMovimentos = new byte[8][8];
-                        vez = vez == Peca.Cor.BRANCO ? Peca.Cor.PRETO : Peca.Cor.BRANCO;
-                        puloMulti = false;
-                    }
-                } else {
-                    pecaSelecionada = null;
-                    possiveisMovimentos = new byte[8][8];
-                    vez = vez == Peca.Cor.BRANCO ? Peca.Cor.PRETO : Peca.Cor.BRANCO;
-                }
+    @Override
+    public void receiveData(DataInputStream in) {
+        try {
+            int id = in.read();
+            switch (id)
+            {
+                case PacketType.SYNCVALUE:
+                    int index = in.readInt();
+                    System.out.println("id:" + index);
+                    cliente = Cor.values()[index];
+                    recebeuCor = true;
+                    break;
+                case PacketType.STARTGAME:
+                    jogoComecou = true;
+                    break;
+                case PacketType.VEZ:
+                    vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
+                    break;
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
-
-    // Verifica todos os movimentos possíveis e pulos, e armazena na matriz possiveisMovimentos:
-    public void verificarMovimentos() {
+    boolean puloMulti = false;
+    public byte[][] verificarMovimentos() {
         if (pecaSelecionada != null) {
-            possiveisMovimentos = new byte[8][8];
 
             int loops = pecaSelecionada.isDama ? 8 : 1;
 
@@ -171,7 +191,7 @@ public class GamePanel1 extends JPanel implements ActionListener {
             int coluna = pecaSelecionada.getX();
 
             if (!pecaSelecionada.isDama) {
-                if (pecaSelecionada.cor == Peca.Cor.PRETO || (pecaSelecionada.cor == Peca.Cor.BRANCO && puloMulti)) {
+                if (pecaSelecionada.cor == Cor.PRETO || (pecaSelecionada.cor == Cor.BRANCO && puloMulti)) {
                     if (linha + 1 < 8 && coluna + 1 < 8) {
                         if (tabuleiro[linha + 1][coluna + 1] == null) {
                             if (!puloMulti)
@@ -197,7 +217,7 @@ public class GamePanel1 extends JPanel implements ActionListener {
                     }
                 }
 
-                if (pecaSelecionada.cor == Peca.Cor.BRANCO || (pecaSelecionada.cor == Peca.Cor.PRETO && puloMulti)) {
+                if (pecaSelecionada.cor == Cor.BRANCO || (pecaSelecionada.cor == Cor.PRETO && puloMulti)) {
                     if (linha - 1 >= 0 && coluna + 1 < 8) {
                         if (tabuleiro[linha - 1][coluna + 1] == null) {
                             if (!puloMulti)
@@ -320,9 +340,9 @@ public class GamePanel1 extends JPanel implements ActionListener {
                 }
             }
         }
-    }
 
-    // Método que verifica se o jogador pode realizar um pulo:
+        return possiveisMovimentos;
+    }
     private boolean verificarPulos() {
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -334,8 +354,8 @@ public class GamePanel1 extends JPanel implements ActionListener {
 
         return false;
     }
-
-    // Método que come a peça
+    int numBrancas = 12;
+    int numPretas = 12;
     private void comerPeca(int linha, int coluna) {
         if (!pecaSelecionada.isDama) {
             tabuleiro[(linha + pecaSelecionada.getY()) / 2][(coluna + pecaSelecionada.getX()) / 2] = null;
@@ -362,44 +382,65 @@ public class GamePanel1 extends JPanel implements ActionListener {
             }
         }
 
-        if (pecaSelecionada.cor == Peca.Cor.PRETO) {
+        if (pecaSelecionada.cor == Cor.PRETO) {
             numBrancas--;
         } else {
             numPretas--;
         }
     }
-
-    // Método que verifica se a peça se tornou dama:
     private void tornarDama(int linha) {
-        if (pecaSelecionada.cor == Peca.Cor.BRANCO && linha == 0) {
+        if (pecaSelecionada.cor == Cor.BRANCO && linha == 0) {
             pecaSelecionada.isDama = true;
-        } else if (pecaSelecionada.cor == Peca.Cor.PRETO && linha == 7) {
+        } else if (pecaSelecionada.cor == Cor.PRETO && linha == 7) {
             pecaSelecionada.isDama = true;
         }
     }
+    public void moverPeca(int linha, int coluna, boolean pulo) {
+        if (linha >= 0 && linha < 8 && coluna >= 0 && coluna < 8) {
+            if (tabuleiro[linha][coluna] == null) {
+                tabuleiro[pecaSelecionada.getY()][pecaSelecionada.getX()] = null;
+                tabuleiro[linha][coluna] = pecaSelecionada;
+                pecaSelecionada.setY(linha);
+                pecaSelecionada.setX(coluna);
 
-    // Método que verifica se o jogo acabou:
-    private boolean verificarFimDeJogo() {
-        return numBrancas == 0 || numPretas == 0;
+                tornarDama(linha);
+
+                if (pulo) {
+                    puloMulti = true;
+
+                    verificarMovimentos();
+
+                    if (!verificarPulos()) {
+                        pecaSelecionada = null;
+                        possiveisMovimentos = new byte[8][8];
+                        vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
+                        puloMulti = false;
+                    }
+                } else {
+                    pecaSelecionada = null;
+                    possiveisMovimentos = new byte[8][8];
+                    vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
+                }
+                client.sendPacket(PacketType.VEZ);
+            }
+        }
     }
-
-    // ============================= MÉTODOS MOUSE ============================= //
-
-    public void actionPerformed(ActionEvent e) {
-    }
-
     public class MyMouseAdapter extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
-
             int linha = e.getY() / UNIT_SIZE;
             int coluna = e.getX() / UNIT_SIZE;
+
+            if (invert) {
+                linha = 7 - linha;
+                coluna = 7 - coluna;
+            }
 
             // ============================= MOVIMENTOS E SELEÇÕES ============================= //
 
             // Seleciona a peça:
             if (pecaSelecionada == null) {
-                selecionarPeca(linha, coluna);
+                selecionarPeca(linha, coluna, false);
                 verificarMovimentos();
             }
 
@@ -428,7 +469,7 @@ public class GamePanel1 extends JPanel implements ActionListener {
                     tabuleiro[linha][coluna].cor == vez) {
 
                 if (!puloMulti) {
-                    selecionarPeca(linha, coluna);
+                    selecionarPeca(linha, coluna, false);
                     verificarMovimentos();
                 }
             }
@@ -441,12 +482,11 @@ public class GamePanel1 extends JPanel implements ActionListener {
 
                 if (puloMulti) {
                     puloMulti = false;
-                    vez = vez == Peca.Cor.BRANCO ? Peca.Cor.PRETO : Peca.Cor.BRANCO;
+                    vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
+                    client.sendPacket(PacketType.VEZ);
                 }
             }
-
-
             repaint();
         }
     }
-}*/
+}

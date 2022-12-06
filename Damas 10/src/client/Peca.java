@@ -1,7 +1,4 @@
-package Cliente;
-
-import Classes.Cor;
-import SingleplayerPK.SinglePlayer;
+package client;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -20,7 +17,6 @@ public class Peca {
     boolean invert;
 
     BufferedImage img;
-
     {
         try {
             img = ImageIO.read(new File("src\\images\\icon.png"));

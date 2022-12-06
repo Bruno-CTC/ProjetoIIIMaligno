@@ -1,4 +1,4 @@
-package Cliente;
+package client;
 
 public class Movimento {
     public int newX, newY;
