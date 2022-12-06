@@ -1,7 +1,9 @@
 package client;
 
-import java.io.DataInputStream;
+import mensagens.Mensagem;
+
+import java.io.ObjectInputStream;
 
 public interface ClientListener {
-    void receiveData(DataInputStream in);
+    void receiveData(Mensagem msg);
 }

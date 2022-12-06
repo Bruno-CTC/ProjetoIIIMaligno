@@ -6,8 +6,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 
-public class Peca {
+public class Peca implements Serializable {
     boolean isDama = false;
 
     private static final int border = 3;
@@ -16,10 +17,26 @@ public class Peca {
     int drawX, drawY;
     boolean invert;
 
-    BufferedImage img;
+    static BufferedImage img;
     {
         try {
             img = ImageIO.read(new File("src\\images\\icon.png"));
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
+        }
+    }
+    static BufferedImage damaBranca;
+    {
+        try {
+            damaBranca = ImageIO.read(new File("src\\images\\coroaBranca.png"));
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
+        }
+    }
+    static BufferedImage damaPreta;
+    {
+        try {
+            damaPreta = ImageIO.read(new File("src\\images\\coroaPreta.png"));
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
         }
@@ -60,29 +77,25 @@ public class Peca {
 
     public void drawCirc(Graphics g) {
         g.setColor(Color.WHITE);
-        /*g.drawOval(drawX * SinglePlayer.UNIT_SIZE + border / 2, drawY * SinglePlayer.UNIT_SIZE + border / 2,
-                SinglePlayer.UNIT_SIZE - border, SinglePlayer.UNIT_SIZE - border);*/
     }
 
     public void drawDama(Graphics g) throws IOException {
-        this.draw(g, invert);
-
         if (cor == Cor.BRANCO) {
             g.setColor(new Color(42, 29, 24));
 
-            /*g.drawImage(ImageIO.read(new File("src\\images\\coroaPreta.png")),
-                    drawX * SinglePlayer.UNIT_SIZE + SinglePlayer.UNIT_SIZE / 4, drawY * SinglePlayer.UNIT_SIZE + SinglePlayer.UNIT_SIZE / 4 + 3,
-                    SinglePlayer.UNIT_SIZE / 2, SinglePlayer.UNIT_SIZE / 2 - 6, null);*/
+            g.drawImage(damaBranca,
+                    drawX * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4, drawY * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4 + 3,
+                    Tela.UNIT_SIZE / 2, Tela.UNIT_SIZE / 2 - 6, null);
         } else {
             g.setColor(new Color(234, 201, 188));
 
-            /*g.drawImage(ImageIO.read(new File("src\\images\\coroaBranca.png")),
-                    drawX * SinglePlayer.UNIT_SIZE + SinglePlayer.UNIT_SIZE / 4, drawY * SinglePlayer.UNIT_SIZE + SinglePlayer.UNIT_SIZE / 4 + 3,
-                    SinglePlayer.UNIT_SIZE / 2, SinglePlayer.UNIT_SIZE / 2 - 6, null);*/
+            g.drawImage(damaPreta,
+                    drawX * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4, drawY * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4 + 3,
+                    Tela.UNIT_SIZE / 2, Tela.UNIT_SIZE / 2 - 6, null);
         }
 
-        /*g.drawOval(drawX * SinglePlayer.UNIT_SIZE + border / 2 + 3, drawY * SinglePlayer.UNIT_SIZE + border / 2 + 3,
-                SinglePlayer.UNIT_SIZE - border - 6, SinglePlayer.UNIT_SIZE - border - 6);*/
+        g.drawOval(drawX * Tela.UNIT_SIZE + border / 2 + 3, drawY * Tela.UNIT_SIZE + border / 2 + 3,
+                Tela.UNIT_SIZE - border - 6, Tela.UNIT_SIZE - border - 6);
     }
 
 

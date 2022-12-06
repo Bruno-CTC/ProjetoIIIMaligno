@@ -1,8 +1,19 @@
 package client;
 
+import mensagens.*;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.font.GlyphVector;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ImageObserver;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.RenderableImage;
 import java.io.*;
+import java.text.AttributedCharacterIterator;
+import java.util.Map;
 import javax.swing.*;
 
 public class Tela extends JPanel implements ClientListener {
@@ -21,24 +32,14 @@ public class Tela extends JPanel implements ClientListener {
 
     boolean invert;
     private Client client;
-    boolean recebeuCor = false;
     boolean jogoComecou = false;
     public Tela(){
         client = new Client(this, "localhost", 12345);
         while (!jogoComecou)
         {
+            System.out.println("Aguardando outro cliente");
             try {
                 Thread.sleep(100);
-                System.out.println("Aguardando outro cliente");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        while (!recebeuCor)
-        {
-            try {
-                Thread.sleep(100);
-                System.out.println("Aguardando cor");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -72,6 +73,8 @@ public class Tela extends JPanel implements ClientListener {
     }
 
     private void startGame(){
+        numPretas = 13;
+        numBrancas = 13;
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 4; j++) {
                 tabuleiro[i][(j * 2 + (i % 2))] = new Peca((j * 2 + (i % 2)), i, Cor.PRETO);
@@ -86,7 +89,6 @@ public class Tela extends JPanel implements ClientListener {
     }
 
     public void paintComponent(Graphics g) {
-        // TODO Auto-generated method stub
         super.paintComponent(g);
         try {
             draw(g);
@@ -95,8 +97,9 @@ public class Tela extends JPanel implements ClientListener {
         }
     }
 
-    public void draw(Graphics g) throws IOException {
-
+    public void draw(Graphics graphics) throws IOException {
+        Graphics2D g = (Graphics2D) graphics;
+        g.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
         // Desenha o tabuleiro:
         g.setColor(new Color(226, 169, 120));
         g.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -112,7 +115,7 @@ public class Tela extends JPanel implements ClientListener {
         // Desenha as peças:
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (tabuleiro[i][j] != null && !tabuleiro[i][j].isDama) {
+                if (tabuleiro[i][j] != null) {
                     tabuleiro[i][j].draw(g, invert);
                 }
             }
@@ -120,17 +123,6 @@ public class Tela extends JPanel implements ClientListener {
 
         if (pecaSelecionada != null) {
             pecaSelecionada.drawCirc(g);
-        }
-
-        // Desenha as damas:
-        for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
-                if (tabuleiro[i][j] != null) {
-                    if (tabuleiro[i][j].isDama) {
-                        tabuleiro[i][j].drawDama(g);
-                    }
-                }
-            }
         }
 
         g.setColor(new Color(255, 228, 228, 100));
@@ -153,36 +145,42 @@ public class Tela extends JPanel implements ClientListener {
     }
 
     // Seleciona a peça:
-    public void selecionarPeca(int linha, int coluna, boolean reverso) {
-        if (reverso || (tabuleiro[linha][coluna] != null && tabuleiro[linha][coluna].cor == cliente && vez == cliente))
+    public void selecionarPeca(int linha, int coluna) {
+        if (tabuleiro[linha][coluna] != null && tabuleiro[linha][coluna].cor == cliente && vez == cliente)
             pecaSelecionada = tabuleiro[linha][coluna];
     }
 
     @Override
-    public void receiveData(DataInputStream in) {
-        try {
-            int id = in.read();
-            switch (id)
-            {
-                case PacketType.SYNCVALUE:
-                    int index = in.readInt();
-                    System.out.println("id:" + index);
-                    cliente = Cor.values()[index];
-                    recebeuCor = true;
-                    break;
-                case PacketType.STARTGAME:
-                    jogoComecou = true;
-                    break;
-                case PacketType.VEZ:
-                    vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
-                    break;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void receiveData(Mensagem msg) {
+        if (msg instanceof MensagemInicioDeJogo)
+        {
+            MensagemInicioDeJogo msgInicio = (MensagemInicioDeJogo) msg;
+            cliente = msgInicio.getCor();
+            jogoComecou = true;
+        }
+        else if (msg instanceof MensagemTrocarVez)
+        {
+            MensagemTrocarVez msgTrocarVez = (MensagemTrocarVez) msg;
+            vez = msgTrocarVez.getVez();
+        }
+        else if (msg instanceof MensagemSincronizarTabuleiro)
+        {
+            MensagemSincronizarTabuleiro msgSincronizar = (MensagemSincronizarTabuleiro) msg;
+            this.tabuleiro = msgSincronizar.getTabuleiro();
+            repaint();
+        }
+        else if (msg instanceof MensagemFimDeJogo)
+        {
+            MensagemFimDeJogo msgFimDeJogo = (MensagemFimDeJogo) msg;
+            JOptionPane.showMessageDialog(null, "O time " + msgFimDeJogo.getVencedor() + " venceu!");
+            possiveisMovimentos = new byte[8][8];
+            tabuleiro = new Peca[8][8];
+            startGame();
         }
     }
     boolean puloMulti = false;
     public byte[][] verificarMovimentos() {
+        possiveisMovimentos = new byte[8][8];
         if (pecaSelecionada != null) {
 
             int loops = pecaSelecionada.isDama ? 8 : 1;
@@ -354,8 +352,8 @@ public class Tela extends JPanel implements ClientListener {
 
         return false;
     }
-    int numBrancas = 12;
-    int numPretas = 12;
+    int numBrancas = 13;
+    int numPretas = 13;
     private void comerPeca(int linha, int coluna) {
         if (!pecaSelecionada.isDama) {
             tabuleiro[(linha + pecaSelecionada.getY()) / 2][(coluna + pecaSelecionada.getX()) / 2] = null;
@@ -387,6 +385,14 @@ public class Tela extends JPanel implements ClientListener {
         } else {
             numPretas--;
         }
+        if (numBrancas == 0)
+        {
+            client.sendData(new MensagemFimDeJogo(Cor.PRETO));
+        }
+        else if (numPretas == 0)
+        {
+            client.sendData(new MensagemFimDeJogo(Cor.BRANCO));
+        }
     }
     private void tornarDama(int linha) {
         if (pecaSelecionada.cor == Cor.BRANCO && linha == 0) {
@@ -399,11 +405,10 @@ public class Tela extends JPanel implements ClientListener {
         if (linha >= 0 && linha < 8 && coluna >= 0 && coluna < 8) {
             if (tabuleiro[linha][coluna] == null) {
                 tabuleiro[pecaSelecionada.getY()][pecaSelecionada.getX()] = null;
-                tabuleiro[linha][coluna] = pecaSelecionada;
                 pecaSelecionada.setY(linha);
                 pecaSelecionada.setX(coluna);
-
                 tornarDama(linha);
+                tabuleiro[linha][coluna] = pecaSelecionada;
 
                 if (pulo) {
                     puloMulti = true;
@@ -416,12 +421,12 @@ public class Tela extends JPanel implements ClientListener {
                         vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
                         puloMulti = false;
                     }
+                    client.sendData(new MensagemSincronizarTabuleiro(tabuleiro));
                 } else {
                     pecaSelecionada = null;
                     possiveisMovimentos = new byte[8][8];
                     vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
                 }
-                client.sendPacket(PacketType.VEZ);
             }
         }
     }
@@ -440,7 +445,7 @@ public class Tela extends JPanel implements ClientListener {
 
             // Seleciona a peça:
             if (pecaSelecionada == null) {
-                selecionarPeca(linha, coluna, false);
+                selecionarPeca(linha, coluna);
                 verificarMovimentos();
             }
 
@@ -453,6 +458,7 @@ public class Tela extends JPanel implements ClientListener {
             // Movimenta a peça caso o movimento seja válido:
             else if (possiveisMovimentos[linha][coluna] == 1) {
                 moverPeca(linha, coluna, false);
+                client.sendData(new MensagemSincronizarTabuleiro(tabuleiro));
                 pecaSelecionada = null;
                 possiveisMovimentos = new byte[8][8];
             }
@@ -461,16 +467,16 @@ public class Tela extends JPanel implements ClientListener {
             else if (possiveisMovimentos[linha][coluna] == 2) {
                 comerPeca(linha, coluna);
                 moverPeca(linha, coluna, true);
+                client.sendData(new MensagemSincronizarTabuleiro(tabuleiro));
             }
 
 
             // Se o movimento não for válido, verifica se outra peça foi selecionada:
-            else if (tabuleiro[linha][coluna] != null &&
-                    tabuleiro[linha][coluna].cor == vez) {
-
+            else if (tabuleiro[linha][coluna] != null && tabuleiro[linha][coluna].cor == vez) {
                 if (!puloMulti) {
-                    selecionarPeca(linha, coluna, false);
+                    selecionarPeca(linha, coluna);
                     verificarMovimentos();
+                    client.sendData(new MensagemSincronizarTabuleiro(tabuleiro));
                 }
             }
 
@@ -483,9 +489,9 @@ public class Tela extends JPanel implements ClientListener {
                 if (puloMulti) {
                     puloMulti = false;
                     vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
-                    client.sendPacket(PacketType.VEZ);
                 }
             }
+            client.sendData(new MensagemTrocarVez(vez));
             repaint();
         }
     }

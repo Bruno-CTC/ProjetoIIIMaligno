@@ -1,10 +1,8 @@
 package server;
 
-import client.PacketType;
-import server.Server;
-import server.ServerListener;
+import client.Cor;
+import mensagens.*;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 
 public class MainServer implements ServerListener {
@@ -21,16 +19,19 @@ public class MainServer implements ServerListener {
     }
 
     @Override
-    public void receiveData(DataInputStream in, int id) throws IOException {
-        int packetType = in.read();
-        switch (packetType)
+    public void receiveData(Mensagem msg, int id)
+    {
+        if (msg instanceof MensagemTrocarVez)
         {
-            case PacketType.DISCONNECT:
-                server.disconnect(id);
-                break;
-            case PacketType.VEZ:
-                server.sendDataToOthers(id, PacketType.VEZ);
-                break;
+            server.sendDataToAll(msg);
+        }
+        else if (msg instanceof MensagemSincronizarTabuleiro)
+        {
+            server.sendDataToAll(msg);
+        }
+        else if (msg instanceof MensagemFimDeJogo)
+        {
+            server.sendDataToAll(msg);
         }
     }
 
@@ -44,9 +45,8 @@ public class MainServer implements ServerListener {
         System.out.println("Client " + id + " connected");
         if (id == 1)
         {
-            server.sendDataToAll(PacketType.STARTGAME);
-            server.sendDataTo(0, PacketType.SYNCVALUE, 0);
-            server.sendDataTo(1, PacketType.SYNCVALUE, 1);
+            server.sendDataTo(0, new MensagemInicioDeJogo(Cor.BRANCO));
+            server.sendDataTo(1, new MensagemInicioDeJogo(Cor.PRETO));
         }
     }
 }

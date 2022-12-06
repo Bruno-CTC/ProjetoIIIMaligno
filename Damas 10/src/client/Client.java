@@ -1,5 +1,8 @@
 package client;
 
+import mensagens.Mensagem;
+import mensagens.MensagemDesconectar;
+
 import java.io.*;
 import java.net.Socket;
 
@@ -7,9 +10,9 @@ public class Client {
     // connects to the server
     private Socket socket = null;
     // outputs data
-    private DataOutputStream out = null;
+    private ObjectOutputStream out = null;
     // receives data
-    private DataInputStream in = null;
+    private ObjectInputStream in = null;
     // the thread that receives data
     private static Thread data;
     // the class that handles the data received
@@ -20,8 +23,8 @@ public class Client {
         {
             this.listener = listener;
             socket = new Socket(address, port);
-            out = new DataOutputStream(socket.getOutputStream());
-            in = new DataInputStream(socket.getInputStream());
+            out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
         } catch(IOException u)
         {
             System.out.println(u);
@@ -33,7 +36,8 @@ public class Client {
     {
         try
         {
-            out.write(PacketType.DISCONNECT);
+            data.interrupt();
+            out.writeObject(new MensagemDesconectar());
             in.close();
             out.close();
             socket.close();
@@ -46,39 +50,27 @@ public class Client {
     private void receiveData() {
         while (!socket.isClosed()) {
             try {
-                if (in.available() <= 0) continue;
-                listener.receiveData(in);
+                Mensagem msg = (Mensagem) in.readObject();
+                if (msg != null)
+                    listener.receiveData(msg);
             }
             catch (IOException e) {
+                System.out.println(e);
+            } catch (ClassNotFoundException e) {
                 System.out.println(e);
             }
         }
     }
-    public void sendPacket(int id, Object... args)
+    public void sendData(Mensagem msg)
     {
-        try {
-            out.write(id);
-            for (Object arg : args) {
-                if (arg instanceof Integer)
-                {
-                    out.writeInt((int)arg);
-                }
-                else if (arg instanceof String)
-                {
-                    out.writeUTF((String)arg);
-                }
-                else if (arg instanceof Float)
-                {
-                    out.writeFloat((float)arg);
-                }
-                else if (arg instanceof Boolean)
-                {
-                    out.writeBoolean((boolean)arg);
-                }
-            }
+        try
+        {
+            out.writeObject(msg);
+            out.flush();
         }
-        catch (IOException e) {
-            System.out.println(e);
+        catch(IOException i)
+        {
+            System.out.println(i);
         }
     }
 }

@@ -1,5 +1,7 @@
 package server;
 import client.*;
+import mensagens.Mensagem;
+import mensagens.MensagemDesconectar;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,9 +22,9 @@ public class Server {
     // the data receivers
     private ArrayList<Thread> receivers;
     // the data inputs
-    private ArrayList<DataInputStream> inputs;
+    private ArrayList<ObjectInputStream> inputs;
     // the data outputs
-    private ArrayList<DataOutputStream> outputs;
+    private ArrayList<ObjectOutputStream> outputs;
     public Server(ServerListener listener, int port) throws IOException {
         this.listener = listener;
         connections = new ArrayList<>();
@@ -37,8 +39,9 @@ public class Server {
     public void close() {
         try {
             connect.interrupt();
-            for (DataOutputStream out : outputs) {
-                out.write(PacketType.DISCONNECT);
+            for (ObjectOutputStream out : outputs) {
+                out.writeObject(new MensagemDesconectar());
+                out.flush();
             }
             for (Thread receiver : receivers) {
                 receiver.interrupt();
@@ -47,7 +50,7 @@ public class Server {
             {
                 s.close();
             }
-            for (DataInputStream i : inputs)
+            for (ObjectInputStream i : inputs)
             {
                 i.close();
             }
@@ -68,47 +71,28 @@ public class Server {
         connections.remove(id);
         listener.onDisconnect(id);
     }
-    public void sendDataTo(int id, int type, Object... args)
+    public void sendDataTo(int id, Mensagem msg)
     {
-        DataOutputStream out = outputs.get(id);
+        ObjectOutputStream out = outputs.get(id);
         try {
-            out.write(type);
-            for (Object arg : args)
-            {
-                if (arg instanceof Integer)
-                {
-                    out.writeInt((int)arg);
-                }
-                else if (arg instanceof String)
-                {
-                    out.writeUTF((String)arg);
-                }
-                else if (arg instanceof Float)
-                {
-                    out.writeFloat((float)arg);
-                }
-                else if (arg instanceof Boolean)
-                {
-                    out.writeBoolean((boolean)arg);
-                }
-            }
+            out.writeObject(msg);
+            out.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-    public void sendDataToOthers(int id, int type, Object... args)
+    public void sendDataToOthers(int id, Mensagem msg)
     {
         for (int i = 0; i < outputs.size(); i++)
         {
             if (i == id) continue;
-            sendDataTo(i, type, args);
+            sendDataTo(i, msg);
         }
     }
-    public void sendDataToAll(int type, Object... args)
-    {
+    public void sendDataToAll(Mensagem msg) {
         for (int i = 0; i < outputs.size(); i++)
         {
-            sendDataTo(i, type, args);
+            sendDataTo(i, msg);
         }
     }
     public int getClientCount()
@@ -121,17 +105,17 @@ public class Server {
             try {
                 Socket s = server.accept();
                 connections.add(s);
-                inputs.add(new DataInputStream(s.getInputStream()));
-                outputs.add(new DataOutputStream(s.getOutputStream()));
+                inputs.add(new ObjectInputStream(s.getInputStream()));
+                outputs.add(new ObjectOutputStream(s.getOutputStream()));
                 Thread receiver = new Thread(() -> {
                     while (!s.isClosed()) {
                         try {
                             int index = connections.indexOf(s);
-                            if (index > inputs.size()) continue;
-                            if (inputs.get(index).available() <= 0) continue;
-                            listener.receiveData(inputs.get(index), index);
+                            Mensagem msg = (Mensagem) inputs.get(index).readObject();
+                            if (msg != null)
+                                listener.receiveData(msg, index);
                         }
-                        catch (IOException e) {
+                        catch (IOException | ClassNotFoundException e) {
                         }
                     }
                 });
