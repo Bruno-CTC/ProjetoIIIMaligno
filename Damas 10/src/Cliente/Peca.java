@@ -1,6 +1,10 @@
+package Cliente;
+
+import Classes.Cor;
 import SingleplayerPK.SinglePlayer;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -10,17 +14,22 @@ public class Peca {
     boolean isDama = false;
 
     private static final int border = 3;
-
-    enum Cor {BRANCO, PRETO}
-
-    Cor cor = Cor.BRANCO;
+    Cor cor;
     int x, y;
     int drawX, drawY;
     boolean invert;
 
-    BufferedImage img = ImageIO.read(new File("src\\images\\icon.png"));
+    BufferedImage img;
 
-    public Peca(int x, int y, Cor cor) throws IOException {
+    {
+        try {
+            img = ImageIO.read(new File("src\\images\\icon.png"));
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Erro ao carregar a imagem");
+        }
+    }
+
+    public Peca(int x, int y, Cor cor){
         this.x = x;
         this.y = y;
         this.cor = cor;
@@ -44,13 +53,13 @@ public class Peca {
         }
 
         // Desenha sombra:
-        /*g.drawImage(img, drawX * SinglePlayer.UNIT_SIZE - 7, drawY * SinglePlayer.UNIT_SIZE - 7,
-                SinglePlayer.UNIT_SIZE + 15, SinglePlayer.UNIT_SIZE + 15, null);
+        g.drawImage(img, drawX * Tela.UNIT_SIZE - 7, drawY * Tela.UNIT_SIZE - 7,
+                Tela.UNIT_SIZE + 15, Tela.UNIT_SIZE + 15, null);
 
 
         // Desenha peça:
-        g.fillOval(drawX * SinglePlayer.UNIT_SIZE + border / 2, drawY * SinglePlayer.UNIT_SIZE + border / 2,
-                SinglePlayer.UNIT_SIZE - border, SinglePlayer.UNIT_SIZE - border);*/
+        g.fillOval(drawX * Tela.UNIT_SIZE + border / 2, drawY * Tela.UNIT_SIZE + border / 2,
+                Tela.UNIT_SIZE - border, Tela.UNIT_SIZE - border);
     }
 
     public void drawCirc(Graphics g) {
@@ -96,4 +105,5 @@ public class Peca {
     public void setY(int y) {
         this.y = y;
     }
+
 }

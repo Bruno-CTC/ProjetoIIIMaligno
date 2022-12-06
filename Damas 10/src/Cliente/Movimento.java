@@ -1,3 +1,5 @@
+package Cliente;
+
 public class Movimento {
     public int newX, newY;
     Peca pecaSelecionada;

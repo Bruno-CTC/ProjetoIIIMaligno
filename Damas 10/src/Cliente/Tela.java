@@ -1,45 +1,83 @@
+package Cliente;
+
+import Classes.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.net.*;
 import javax.swing.*;
 
 public class Tela extends JPanel implements ActionListener {
-
-    ObjectInputStream receptor;
-    ObjectOutputStream transmissor;
-
-
-    Peca[][] tabuleiro;
+    Peca[][] tabuleiro = new Peca[8][8];
     Peca pecaSelecionada;
 
     static final int SCREEN_WIDTH = 600;
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = SCREEN_HEIGHT / 8;
 
-    Peca.Cor cliente;
-    Peca.Cor vez;
+    Cor cliente;
+    Cor corContraria;
+    Cor vez;
 
     byte[][] possiveisMovimentos = new byte[8][8]; // 0 = não pode mover, 1 = pode mover, 2 = comer
 
     boolean invert;
+    private Parceiro servidor;
+    public Tela(Parceiro p){
+        this.servidor = p;
+        try {
+            servidor.receba(new PedidoCor());
+        } catch (Exception e) {
 
-    public Tela(Socket canal) throws IOException {
+        }
+        Comunicado comunicado = null;
+        do {
+            try{
+                comunicado = (Comunicado) servidor.espie();
+            }catch (Exception e){}
+        }while(!(comunicado instanceof ComunicadoDeCOR));
+        ComunicadoDeCOR comCor = (ComunicadoDeCOR) comunicado;
+        cliente = comCor.getCor();
+        if(cliente == Cor.BRANCO)
+            corContraria = Cor.PRETO;
+        else
+            corContraria = Cor.BRANCO;
 
-        receptor = new ObjectInputStream(canal.getInputStream());
-        transmissor = new ObjectOutputStream(canal.getOutputStream());
 
-        invert = cliente == Peca.Cor.PRETO;
+        vez = Cor.BRANCO;
 
-        new GameFrame(this);
+        invert = false;
 
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         this.setBackground(Color.black);
         this.setFocusable(true);
         this.addMouseListener(new MyMouseAdapter());
+        this.addMouseMotionListener(new MyMouseAdapter());
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                tabuleiro[i][j] = null;
+            }
+        }
+
+        //invert = cliente == Peca.Cor.PRETO;
+
+        startGame();
     }
 
+    private void startGame(){
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 4; j++) {
+                tabuleiro[i][(j * 2 + (i % 2))] = new Peca((j * 2 + (i % 2)), i, corContraria);
+            }
+        }
 
+        for (int i = 5; i < 8; i++) {
+            for (int j = 0; j < 4; j++) {
+                tabuleiro[i][j * 2 + (i % 2)] = new Peca((j * 2 + (i % 2)), i, cliente);
+            }
+        }
+    }
 
     public void paintComponent(Graphics g) {
         // TODO Auto-generated method stub
@@ -68,7 +106,7 @@ public class Tela extends JPanel implements ActionListener {
         // Desenha as peças:
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                if (tabuleiro[i][j] != null) {
+                if (tabuleiro[i][j] != null && !tabuleiro[i][j].isDama) {
                     tabuleiro[i][j].draw(g, invert);
                 }
             }
@@ -88,6 +126,8 @@ public class Tela extends JPanel implements ActionListener {
                 }
             }
         }
+
+        g.setColor(new Color(255, 228, 228, 100));
 
         // Desenha possíveis pulos:
         for (int i = 0; i < 8; i++) {

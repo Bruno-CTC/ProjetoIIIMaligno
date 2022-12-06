@@ -1,8 +1,11 @@
+package Cliente;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import Classes.*;
 
-public class Tabuleiro {
+public class Tabuleiro extends Comunicado {
 
     ObjectInputStream receptor;
     ObjectOutputStream transmissor;
@@ -25,7 +28,7 @@ public class Tabuleiro {
     boolean puloMulti = false;
     byte[][] possiveisMovimentos = new byte[8][8]; // 0 = não pode mover, 1 = pode mover, 2 = comer
 
-    Peca.Cor vez = Peca.Cor.BRANCO;
+    Cor vez = Cor.BRANCO;
 
     int numBrancas = 12;
     int numPretas = 12;
@@ -39,13 +42,13 @@ public class Tabuleiro {
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 4; j++) {
-                tabuleiro[i][(j * 2 + (i % 2))] = new Peca((j * 2 + (i % 2)), i, Peca.Cor.PRETO);
+                tabuleiro[i][(j * 2 + (i % 2))] = new Peca((j * 2 + (i % 2)), i, Cor.PRETO);
             }
         }
 
         for (int i = 5; i < 8; i++) {
             for (int j = 0; j < 4; j++) {
-                tabuleiro[i][j * 2 + (i % 2)] = new Peca((j * 2 + (i % 2)), i, Peca.Cor.BRANCO);
+                tabuleiro[i][j * 2 + (i % 2)] = new Peca((j * 2 + (i % 2)), i, Cor.BRANCO);
             }
         }
     }
@@ -71,13 +74,13 @@ public class Tabuleiro {
                     if (!verificarPulos()) {
                         pecaSelecionada = null;
                         possiveisMovimentos = new byte[8][8];
-                        vez = vez == Peca.Cor.BRANCO ? Peca.Cor.PRETO : Peca.Cor.BRANCO;
+                        vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
                         puloMulti = false;
                     }
                 } else {
                     pecaSelecionada = null;
                     possiveisMovimentos = new byte[8][8];
-                    vez = vez == Peca.Cor.BRANCO ? Peca.Cor.PRETO : Peca.Cor.BRANCO;
+                    vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
                 }
             }
         }
@@ -93,7 +96,7 @@ public class Tabuleiro {
             int coluna = pecaSelecionada.getX();
 
             if (!pecaSelecionada.isDama) {
-                if (pecaSelecionada.cor == Peca.Cor.PRETO || (pecaSelecionada.cor == Peca.Cor.BRANCO && puloMulti)) {
+                if (pecaSelecionada.cor == Cor.PRETO || (pecaSelecionada.cor == Cor.BRANCO && puloMulti)) {
                     if (linha + 1 < 8 && coluna + 1 < 8) {
                         if (tabuleiro[linha + 1][coluna + 1] == null) {
                             if (!puloMulti)
@@ -119,7 +122,7 @@ public class Tabuleiro {
                     }
                 }
 
-                if (pecaSelecionada.cor == Peca.Cor.BRANCO || (pecaSelecionada.cor == Peca.Cor.PRETO && puloMulti)) {
+                if (pecaSelecionada.cor == Cor.BRANCO || (pecaSelecionada.cor == Cor.PRETO && puloMulti)) {
                     if (linha - 1 >= 0 && coluna + 1 < 8) {
                         if (tabuleiro[linha - 1][coluna + 1] == null) {
                             if (!puloMulti)
@@ -286,7 +289,7 @@ public class Tabuleiro {
             }
         }
 
-        if (pecaSelecionada.cor == Peca.Cor.PRETO) {
+        if (pecaSelecionada.cor == Cor.PRETO) {
             numBrancas--;
         } else {
             numPretas--;
@@ -295,9 +298,9 @@ public class Tabuleiro {
 
     // Método que verifica se a peça se tornou dama:
     private void tornarDama(int linha) {
-        if (pecaSelecionada.cor == Peca.Cor.BRANCO && linha == 0) {
+        if (pecaSelecionada.cor == Cor.BRANCO && linha == 0) {
             pecaSelecionada.isDama = true;
-        } else if (pecaSelecionada.cor == Peca.Cor.PRETO && linha == 7) {
+        } else if (pecaSelecionada.cor == Cor.PRETO && linha == 7) {
             pecaSelecionada.isDama = true;
         }
     }
