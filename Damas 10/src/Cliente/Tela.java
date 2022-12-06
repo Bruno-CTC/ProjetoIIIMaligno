@@ -37,6 +37,8 @@ public class Tela extends JPanel implements ActionListener {
             }catch (Exception e){}
         }while(!(comunicado instanceof ComunicadoDeCOR));
         ComunicadoDeCOR comCor = (ComunicadoDeCOR) comunicado;
+        System.out.println(comCor);
+        System.out.println(comCor.getCor());
         cliente = comCor.getCor();
         if(cliente == Cor.BRANCO)
             corContraria = Cor.PRETO;
