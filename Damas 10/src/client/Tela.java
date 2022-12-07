@@ -106,8 +106,8 @@ public class Tela extends JPanel implements ClientListener {
 
         g.setColor(new Color(82, 48, 34));
 
-        for (int i = 0; i < UNIT_SIZE; i++) {
-            for (int j = 0; j < UNIT_SIZE; j += 2) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j += 2) {
                 g.fillRect((j + (i % 2)) * UNIT_SIZE, i * UNIT_SIZE, UNIT_SIZE, UNIT_SIZE);
             }
         }
@@ -426,10 +426,6 @@ public class Tela extends JPanel implements ClientListener {
                     possiveisMovimentos = new byte[8][8];
                     vez = vez == Cor.BRANCO ? Cor.PRETO : Cor.BRANCO;
                 }
-
-                client.sendData(new MensagemSincronizarTabuleiro(tabuleiro));
-
-                repaint();
             }
         }
     }
@@ -474,7 +470,7 @@ public class Tela extends JPanel implements ClientListener {
             }
 
 
-            // Se o movimento não for válido, verifica se outra peça foi selecionada:
+            // Se o movimento for inválido, verifica se outra peça foi selecionada:
             else if (tabuleiro[linha][coluna] != null && tabuleiro[linha][coluna].cor == vez) {
                 if (!puloMulti) {
                     selecionarPeca(linha, coluna);
@@ -484,7 +480,7 @@ public class Tela extends JPanel implements ClientListener {
             }
 
 
-            // Se o movimento não for válido e outra peça não foi selecionada, deseleciona a peça (sempre acaba aqui):
+            // Se o movimento for inválido e outra peça não foi selecionada, deseleciona a peça (sempre acaba aqui):
             else {
                 pecaSelecionada = null;
                 possiveisMovimentos = new byte[8][8];
@@ -495,7 +491,7 @@ public class Tela extends JPanel implements ClientListener {
                 }
             }
             client.sendData(new MensagemTrocarVez(vez));
-            repaint();
+            repaint(); // Esse cara volta o tabuleiro para a posição inicial
         }
     }
 }

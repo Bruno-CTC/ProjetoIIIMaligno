@@ -66,18 +66,18 @@ public class Peca implements Serializable {
         }
 
         // Desenha sombra:
-        g.drawImage(img, drawX * Tela.UNIT_SIZE - 7, drawY * Tela.UNIT_SIZE - 7,
+        g.drawImage(img,this.drawX * Tela.UNIT_SIZE - 7,this.drawY * Tela.UNIT_SIZE - 7,
                 Tela.UNIT_SIZE + 15, Tela.UNIT_SIZE + 15, null);
 
 
         // Desenha peça:
-        g.fillOval(drawX * Tela.UNIT_SIZE + border / 2, drawY * Tela.UNIT_SIZE + border / 2,
+        g.fillOval(this.drawX * Tela.UNIT_SIZE + border / 2,this.drawY * Tela.UNIT_SIZE + border / 2,
                 Tela.UNIT_SIZE - border, Tela.UNIT_SIZE - border);
     }
 
     public void drawCirc(Graphics g) {
         g.setColor(Color.WHITE);
-        g.drawOval(drawX * Tela.UNIT_SIZE + border / 2, drawY * Tela.UNIT_SIZE + border / 2,
+        g.drawOval(this.drawX * Tela.UNIT_SIZE + border / 2, this.drawY * Tela.UNIT_SIZE + border / 2,
                 Tela.UNIT_SIZE - border, Tela.UNIT_SIZE - border);
     }
 
@@ -86,17 +86,17 @@ public class Peca implements Serializable {
             g.setColor(new Color(42, 29, 24));
 
             g.drawImage(damaBranca,
-                    drawX * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4, drawY * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4 + 3,
+                   this.drawX * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4,this.drawY * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4 + 3,
                     Tela.UNIT_SIZE / 2, Tela.UNIT_SIZE / 2 - 6, null);
         } else {
             g.setColor(new Color(234, 201, 188));
 
             g.drawImage(damaPreta,
-                    drawX * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4, drawY * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4 + 3,
+                   this.drawX * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4,this.drawY * Tela.UNIT_SIZE + Tela.UNIT_SIZE / 4 + 3,
                     Tela.UNIT_SIZE / 2, Tela.UNIT_SIZE / 2 - 6, null);
         }
 
-        g.drawOval(drawX * Tela.UNIT_SIZE + border / 2 + 3, drawY * Tela.UNIT_SIZE + border / 2 + 3,
+        g.drawOval(drawX * Tela.UNIT_SIZE + border / 2 + 3,this.drawY * Tela.UNIT_SIZE + border / 2 + 3,
                 Tela.UNIT_SIZE - border - 6, Tela.UNIT_SIZE - border - 6);
     }
 
